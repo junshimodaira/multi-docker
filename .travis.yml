@@ -1,0 +1,24 @@
+sudo: required
+language: generic
+
+services:
+  - docker
+
+before_install:
+  - docker build -t junshimodaira/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true junshimodaira/react-test npm test
+
+after_success:
+  - docker build -t junshimodaira/multi-client ./client
+  - docker build -t junshimodaira/multi-nginx ./nginx
+  - docker build -t junshimodaira/multi-server ./server
+  - docker build -t junshimodaira/multi-worker ./worker
+  # Login to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push junshimodaira/multi-client
+  - docker push junshimodaira/multi-nginx
+  - docker push junshimodaira/multi-server
+  - docker push junshimodaira/multi-worker
